@@ -35,16 +35,14 @@ public class UserMealsUtil {
 
         List<UserMealWithExcess> userMealsFiltered = new ArrayList<>();
         meals.forEach(meal -> {
-                    if (isBetweenHalfOpen(meal.getDateTime().toLocalTime(), startTime, endTime)) {
-                        boolean excess = caloriesPerDayMap.get(meal.getDateTime().toLocalDate()) > caloriesPerDay;
-                        LocalDateTime dateTime = meal.getDateTime();
-                        String description = meal.getDescription();
-                        Integer calories = meal.getCalories();
-                        UserMealWithExcess mealFiltered = new UserMealWithExcess(dateTime, description, calories, excess);
-                        userMealsFiltered.add(mealFiltered);
-                    }
-                }
-        );
+            if (isBetweenHalfOpen(meal.getDateTime().toLocalTime(), startTime, endTime)) {
+                UserMealWithExcess mealFiltered = new UserMealWithExcess(meal.getDateTime(),
+                        meal.getDescription(),
+                        meal.getCalories(),
+                        caloriesPerDayMap.get(meal.getDateTime().toLocalDate()) > caloriesPerDay);
+                userMealsFiltered.add(mealFiltered);
+            }
+        });
         return userMealsFiltered;
     }
 
