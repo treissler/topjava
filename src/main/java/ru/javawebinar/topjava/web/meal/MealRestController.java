@@ -7,49 +7,58 @@ import org.springframework.stereotype.Controller;
 import ru.javawebinar.topjava.model.Meal;
 import ru.javawebinar.topjava.service.MealService;
 import ru.javawebinar.topjava.to.MealTo;
+import ru.javawebinar.topjava.util.DateTimeUtil;
 import ru.javawebinar.topjava.util.MealsUtil;
 import ru.javawebinar.topjava.web.SecurityUtil;
 
-import java.util.Collection;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static ru.javawebinar.topjava.util.ValidationUtil.assureIdConsistent;
 import static ru.javawebinar.topjava.util.ValidationUtil.checkNew;
 
 @Controller
 public class MealRestController {
-    protected final Logger log = LoggerFactory.getLogger(getClass());
+    private final Logger log = LoggerFactory.getLogger(getClass());
     @Autowired
     private MealService service;
 
-    public Collection<MealTo> getAll() {
+    public List<MealTo> getAll() {
         log.info("getAll");
         return MealsUtil.getTos(service.getAll(SecurityUtil.authUserId()), SecurityUtil.authUserCaloriesPerDay());
     }
 
-    public MealTo get(int id) {
+    public Meal get(int id) {
         log.info("get {}", id);
-        Meal meal = service.get(id, SecurityUtil.authUserId());
-        return new MealTo(meal.getId(), meal.getDateTime(), meal.getDescription(), meal.getCalories(), false);
+        return service.get(id, SecurityUtil.authUserId());
     }
 
-    public MealTo create(MealTo mealTo) {
-        log.info("create {}", mealTo);
-        Meal meal = new Meal(mealTo.getId(), SecurityUtil.authUserId(), mealTo.getDateTime(), mealTo.getDescription(), mealTo.getCalories());
+    public Meal create(Meal meal) {
+        log.info("create {}", meal);
         checkNew(meal);
-        service.create(meal);
-        return mealTo;
+        return service.create(meal, SecurityUtil.authUserId());
     }
 
     public void delete(int id) {
-        log.info("delete {}", id, " ");
+        log.info("delete {}", id);
         service.delete(id, SecurityUtil.authUserId());
     }
 
-    public void update(MealTo mealTo, int id) {
-        log.info("update {} with id={}", id);
-        Meal meal = new Meal(mealTo.getId(), SecurityUtil.authUserId(), mealTo.getDateTime(), mealTo.getDescription(), mealTo.getCalories());
+    public void update(Meal meal, int id) {
+        log.info("update {} with id={}", meal, id);
         assureIdConsistent(meal, id);
-        service.update(meal);
+        if (meal.getUserId() != null && meal.getUserId().intValue() == SecurityUtil.authUserId()) {
+            service.update(meal, SecurityUtil.authUserId());
+        }
+    }
+
+    public List<MealTo> filterByDateTime(List<MealTo> meals, LocalDate startDate, LocalTime startTime, LocalDate endDate, LocalTime endTime) {
+        return meals.stream()
+                .filter(meal -> DateTimeUtil.isBetweenDates(meal.getDateTime().toLocalDate(), startDate, endDate)
+                        && DateTimeUtil.isBetweenHalfOpen(meal.getDateTime().toLocalTime(), startTime, endTime))
+                .collect(Collectors.toList());
     }
 
 }
