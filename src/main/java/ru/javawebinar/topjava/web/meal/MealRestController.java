@@ -49,13 +49,15 @@ public class MealRestController {
     public void update(Meal meal, int id) {
         log.info("update {} with id={}", meal, id);
         assureIdConsistent(meal, id);
-        if (meal.getUserId() != null && meal.getUserId().intValue() == SecurityUtil.authUserId()) {
-            service.update(meal, SecurityUtil.authUserId());
-        }
+        //a pair user-meal exists or we get NotFoundException
+        service.get(id, SecurityUtil.authUserId());
+        service.update(meal, SecurityUtil.authUserId());
     }
 
-    public List<MealTo> filterByDateTime(List<MealTo> meals, LocalDate startDate, LocalTime startTime, LocalDate endDate, LocalTime endTime) {
-        return meals.stream()
+    public List<MealTo> filterByDateTime(LocalDate startDate, LocalTime startTime, LocalDate endDate, LocalTime endTime) {
+        log.info("filterByDateTime date: {} / {} time: {} / {}", startDate, endDate, startTime, endTime);
+        return MealsUtil.getTos(service.getAll(SecurityUtil.authUserId()), SecurityUtil.authUserCaloriesPerDay())
+                .stream()
                 .filter(meal -> DateTimeUtil.isBetweenDates(meal.getDateTime().toLocalDate(), startDate, endDate)
                         && DateTimeUtil.isBetweenHalfOpen(meal.getDateTime().toLocalTime(), startTime, endTime))
                 .collect(Collectors.toList());

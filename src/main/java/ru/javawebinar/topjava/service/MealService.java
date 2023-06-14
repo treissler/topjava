@@ -17,8 +17,8 @@ public class MealService {
         this.repository = repository;
     }
 
-    public Meal create(Meal meal, Integer userId) {
-        return repository.save(meal);
+    public Meal create(Meal meal, int userId) {
+        return repository.save(meal, userId);
     }
 
     public void delete(int id, int userId) {
@@ -33,8 +33,8 @@ public class MealService {
         return repository.getAll(userId);
     }
 
-    public void update(Meal meal, Integer userId) {
-        checkNotFoundWithId(repository.save(meal), meal.getId());
+    public void update(Meal meal, int userId) {
+        checkNotFoundWithId(repository.save(meal, userId), meal.getId());
     }
 
 }

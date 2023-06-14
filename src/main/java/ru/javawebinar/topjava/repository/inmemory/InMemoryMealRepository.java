@@ -18,18 +18,18 @@ public class InMemoryMealRepository implements MealRepository {
     private final AtomicInteger counter = new AtomicInteger(0);
 
     {
-        MealsUtil.meals.forEach(this::save);
+        MealsUtil.meals.forEach(meal -> this.save(meal, meal.getUserId()));
     }
 
     @Override
-    public Meal save(Meal meal) {
+    public Meal save(Meal meal, int userId) {
         if (meal.isNew()) {
             meal.setId(counter.incrementAndGet());
             repository.put(meal.getId(), meal);
             return meal;
         }
         // handle case: update, but not present in storage
-        if (meal.getId() != null && meal.getUserId().intValue() == repository.get(meal.getId()).getUserId().intValue()) {
+        if (meal.getUserId().equals(repository.get(meal.getId()).getUserId())) {
             return repository.computeIfPresent(meal.getId(), (id, oldMeal) -> meal);
         }
         return null;
@@ -47,7 +47,7 @@ public class InMemoryMealRepository implements MealRepository {
     @Override
     public Meal get(int id, int userId) {
         Meal meal = repository.get(id);
-        if (null != meal && meal.getUserId() == userId) {
+        if (meal != null && meal.getUserId() == userId) {
             return meal;
         }
         return null;
