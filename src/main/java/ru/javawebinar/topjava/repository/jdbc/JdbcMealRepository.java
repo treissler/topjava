@@ -45,7 +45,7 @@ public class JdbcMealRepository implements MealRepository {
             meal.setId(newKey.intValue());
         } else if (namedParameterJdbcTemplate.update(
                 "UPDATE meals SET date_time=:date_time, description=:description, " +
-                        "calories=:calories WHERE id=:id", map) == 0) {
+                        "calories=:calories WHERE id=:id AND user_id=:user_id", map) == 0) {
             return null;
         }
         return meal;
@@ -70,9 +70,8 @@ public class JdbcMealRepository implements MealRepository {
     @Override
     public List<Meal> getBetweenHalfOpen(LocalDateTime startDateTime, LocalDateTime endDateTime, int userId) {
         return jdbcTemplate.query("SELECT * FROM meals WHERE user_id=?" +
-                " AND date_time::date >= date '" + startDateTime.toLocalDate() + "'" +
-                " AND date_time::date < date '" + endDateTime.toLocalDate() + "'" +
-                " ORDER BY date_time DESC", ROW_MAPPER, userId);
+                " AND date_time BETWEEN ? AND ? " +
+                " ORDER BY date_time DESC", ROW_MAPPER, userId, startDateTime.toLocalDate(), endDateTime.toLocalDate());
     }
 
 }
